@@ -6,7 +6,7 @@ from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
-from error_codes import error_codes
+from http import HTTPStatus
 
 # SSL Configuration (Enable it if you want a security context here)
 # import ssl
@@ -68,7 +68,7 @@ def generate_response(response, responseno = 200):
         'error': False,
         'data': response, 
         'code': response_code,
-        'diagnostic': error_codes[response_code]
+        'diagnostic': HTTPStatus(response_code).name
     }
 
     if response_code >= 400:
@@ -89,7 +89,7 @@ def generate_error(diagnostic, errno = 400):
     error_hint = {
         'error': True,
         'data': None,
-        'diagnostic': (error_codes[error_code] if diagnostic == None else diagnostic),
+        'diagnostic': (HTTPStatus(error_code).name if diagnostic == None else diagnostic),
         'code': error_code
     }
     return json.dumps(error_hint, indent=4), errno

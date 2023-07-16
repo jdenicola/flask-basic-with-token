@@ -33,22 +33,23 @@ roles = {
 }
 
 
-# Tomo el log de stdout y stderr y lo envio a syslog
 class LoggerWriter:
+    """
+    Example Logger Writer:
+    Takes all output from stdout and stderr and prints them on stdout's console. Not required by flask.
+    """
+
     def __init__(self, log_name):
         self.log_name = log_name
         self.buf = []
 
     def write(self, msg):
-        #if msg.endswith('\n'):
         msg = msg.replace("\n", '')
         if len(msg) > 0:
             self.buf.append(f"[{self.log_name}] " + msg)
-            # Necesito imprimirlo ya que hago un override de stdout y stderr
             print(''.join(self.buf), file=sys.__stdout__, flush=True)
-            # gigasyslog.syslog(''.join(self.buf))
             self.buf = []
-            
+
     def flush(self):
         self.buf = []
         pass
@@ -59,28 +60,31 @@ sys.stdout = LoggerWriter("INFO")
 sys.stderr = LoggerWriter("ERROR")
 
 
-def generate_response(response, responseno = 200):
-    '''Uso: generate_response("Datos", codigo_respuesta, 200)'''
+def generate_response(response, responseno=200):
+    """
+    A standarized response generator
+    Usage: generate_response(jsonified_data, response_code = 200)
+    """
     if type(response) is tuple:
         response, response_code = response
         print(f"Se devolverá una excepción {response_code}: {response}")
     else:
         response_code = responseno
-    
+
     response_hint = {
         'error': False,
-        'data': response, 
+        'data': response,
         'code': response_code,
         'diagnostic': HTTPStatus(response_code).name
     }
 
     if response_code >= 400:
         response_hint['error'] = True
-    
+
     return json.dumps(response_hint, indent=4), responseno
 
 
-def generate_error(diagnostic, errno = 400):
+def generate_error(diagnostic, errno=400):
     if type(diagnostic) is tuple:
         diagnostic, error_code = diagnostic
         print(f"Se devolverá una excepción {error_code}: {diagnostic}")
@@ -89,7 +93,7 @@ def generate_error(diagnostic, errno = 400):
         diagnostic = None
     else:
         error_code = errno
-    
+
     error_hint = {
         'error': True,
         'data': None,
@@ -127,8 +131,10 @@ def verify_password(username, password):
 
 @token_auth.verify_token
 def verify_token(token):
-    ''' I'm using a very inefficient script here. If you implement your own
-    database, you can obtain your username via a valid token'''
+    """
+    Token verifier: I'm using a very inefficient script here. If you implement your own
+    database, you can obtain your username via a valid token
+    """
 
     print(f"[TOKEN] Checking token {token}", file=sys.stderr)
 
@@ -141,7 +147,7 @@ def verify_token(token):
 @app.route('/')
 @multi_auth.login_required(role=['admin'])
 def hello_world():
-    """Prints identificator"""
+    """This is a sample endpoint"""
     return "My basic API"
 
 

@@ -32,6 +32,7 @@ roles = {
     "first_user": ["admin"]
 }
 
+
 # Tomo el log de stdout y stderr y lo envio a syslog
 class LoggerWriter:
     def __init__(self, log_name):
@@ -52,9 +53,11 @@ class LoggerWriter:
         self.buf = []
         pass
 
+
 # Para acceder a stdout/stderr, usar sys.__stdout__/sys.__stderr__
 sys.stdout = LoggerWriter("INFO")
 sys.stderr = LoggerWriter("ERROR")
+
 
 def generate_response(response, responseno = 200):
     '''Uso: generate_response("Datos", codigo_respuesta, 200)'''
@@ -76,6 +79,7 @@ def generate_response(response, responseno = 200):
     
     return json.dumps(response_hint, indent=4), responseno
 
+
 def generate_error(diagnostic, errno = 400):
     if type(diagnostic) is tuple:
         diagnostic, error_code = diagnostic
@@ -94,10 +98,12 @@ def generate_error(diagnostic, errno = 400):
     }
     return json.dumps(error_hint, indent=4), errno
 
+
 @token_auth.get_user_roles
 @basic_auth.get_user_roles
 def get_user_roles(user):
     return roles[user]
+
 
 # This error handles Flask/Python exceptions, in case you need to catch a 404 or 500 error, use @app.errorhandler(404)
 @app.errorhandler(Exception)
@@ -105,16 +111,19 @@ def all_exception_handler(error):
     print(str(error))
     return generate_error(str(error), 500)
 
+
 @token_auth.error_handler
 @basic_auth.error_handler
 def default_error(status):
     return generate_error(status)
+
 
 @basic_auth.verify_password
 def verify_password(username, password):
     if username in users and \
             check_password_hash(users.get(username)["password"], password):
         return username
+
 
 @token_auth.verify_token
 def verify_token(token):
@@ -128,11 +137,13 @@ def verify_token(token):
             return user
     return None
 
+
 @app.route('/')
 @multi_auth.login_required(role=['admin'])
 def hello_world():
     """Prints identificator"""
     return "My basic API"
+
 
 @app.route('/goodbye', methods=['POST', 'GET'])
 @multi_auth.login_required(role=['admin'])
@@ -143,6 +154,7 @@ def goodbye_world():
         return response
     else:
         return generate_error(405)
+
 
 if __name__ == "__main__":
     # If you run Flask standalone, these are your settings.

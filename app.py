@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from flask import Flask, url_for, Response, request
-import inspect, sys, json
+from flask import Flask, request, jsonify
+import sys
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,6 +9,7 @@ import json
 from http import HTTPStatus
 
 # SSL Configuration (Enable it if you want a security context here)
+# It's highly recommended that you run Flask behind a proxy to avoid server headers exposure.
 # import ssl
 # context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 # context.load_cert_chain('certificate.crt', 'privatekey.key')
@@ -81,7 +82,7 @@ def generate_response(response, responseno=200):
     if response_code >= 400:
         response_hint['error'] = True
 
-    return json.dumps(response_hint, indent=4), responseno
+    return jsonify(response_hint), responseno
 
 
 def generate_error(diagnostic, errno=400):
@@ -100,7 +101,7 @@ def generate_error(diagnostic, errno=400):
         'diagnostic': (HTTPStatus(error_code).name if diagnostic == None else diagnostic),
         'code': error_code
     }
-    return json.dumps(error_hint, indent=4), errno
+    return jsonify(error_hint, indent=4), errno
 
 
 @token_auth.get_user_roles
@@ -148,7 +149,7 @@ def verify_token(token):
 @multi_auth.login_required(role=['admin'])
 def hello_world():
     """This is a sample endpoint"""
-    return "My basic API"
+    return generate_response("You logged in successfully. Congrats!")
 
 
 @app.route('/goodbye', methods=['POST', 'GET'])
